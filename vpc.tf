@@ -56,6 +56,24 @@ resource "aws_vpc_endpoint" "internal_vpc_secretsmanager" {
   )
 }
 
+# Endpoint to reach private S3 rpmrepo buckets from within the VPC.
+resource "aws_vpc_endpoint" "internal_vpc_rpmrepo" {
+  vpc_id            = data.aws_vpc.internal_vpc.id
+  service_name      = "com.amazonaws.us-east-1.s3"
+  vpc_endpoint_type = "Interface"
+
+  security_group_ids = [
+    aws_security_group.internal_allow_egress.id,
+    aws_security_group.internal_allow_trusted.id,
+  ]
+
+  subnet_ids = data.aws_subnet_ids.internal_subnets.ids
+
+  tags = merge(
+    var.imagebuilder_tags, { Name = "📸 RPMrepo Snapshots S3 endpoint (internal)" },
+  )
+}
+
 ##############################################################################
 ## PUBLIC SECURITY GROUPS
 # Security group for composer instances.
